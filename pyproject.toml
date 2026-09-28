@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zk-reader-api"
+version = "0.1.0a1"
+description = "Direct serial Python and local HTTP API for ZK Ex10 RFID readers"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["pyserial>=3.5,<4"]
+
+[project.scripts]
+zk-reader-api = "zk_reader_api.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
