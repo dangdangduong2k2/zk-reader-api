@@ -193,7 +193,7 @@ class ReaderTests(unittest.TestCase):
         self.assertEqual(serial.writes, [])
 
     def test_unsupported_info_format(self):
-        for data in (bytes(10), bytes(4)+b"\xff\xff"+bytes(6)):
+        for data in (bytes(10), bytes(13)):
             reader = Reader(SerialTransport(ScriptedSerial([response(0x21, data)])))
             with self.assertRaises(ProtocolError):
                 reader.info()

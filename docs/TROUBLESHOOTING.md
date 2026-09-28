@@ -17,6 +17,11 @@
 | Write ACK nhưng EPC không hiện đúng | Đọc lại EPC và PC. API không tự sửa PC khi thay độ dài EPC |
 | Mất ACK ghi / lỗi restore | Kết quả ghi có thể đã xảy ra. Không gửi lại ngay; kiểm tra anten rồi đọc thẻ bằng TID selector |
 | Reader busy | Gọi tuần tự. Một tiến trình sở hữu reader; mỗi lệnh ghép chọn anten/read/write/restore được khóa cùng nhau |
+| Get power lỗi / số cổng không khớp | Alpha 2 đọc vector thật qua 0x94; kiểm tra --antennas và firmware hỗ trợ. Không lặp giá trị ANT1 cho các cổng còn lại |
+| Set profile trả lỗi | Chọn đúng legacy/extended và ID ZK được firmware hỗ trợ; không truyền chỉ số profile Nation như thể cùng namespace |
+| Profile hiển thị sai tên trong ứng dụng | Bên tích hợp phải dùng bảng thông số đúng chip/firmware ZK. Cùng ID giữa Nation/R2000/Ex10 có thể khác Tari/Miller/BLF |
+| Tần số ngoài phạm vi | Kiểm tra band ZK và chỉ số kênh trong configuration.py. min=max để cố định; danh sách kênh rời rạc chưa hỗ trợ |
+| Set báo readback mismatch | Reader đã ACK nhưng Get không khớp yêu cầu; không báo thành công hoặc tự retry. Đọc lại cấu hình và kiểm tra firmware |
 
 Khi báo lỗi: ghi phiên bản API, OS/Python, model/firmware, baud/antenna, endpoint, mã lỗi và bước tái hiện. Không đưa token, password thật, EPC/TID khách hàng hoặc cấu hình riêng lên issue public.
 

@@ -27,13 +27,65 @@ Bộ lọc có thể khớp nhiều thẻ; API không bảo đảm duy nhất. D
 
 `GET /v1/reader`: address, firmware, reader_type, protocol_bits, configured_antennas, power_dbm, antenna_mask, frequency_bytes, check_antenna. Số anten là cấu hình khi mở API, không phải tự phát hiện chính xác model.
 
-`GET /v1/power` trả `dbm`, `scope: "global"`. Đặt bằng:
+`GET /v1/power` đọc công suất từng anten từ lệnh ZK `0x94`. Đặt cùng một mức cho tất cả anten bằng:
 
 ```json
 {"dbm": 22, "persist": false}
 ```
 
-`dbm` nguyên 0–30; `persist` mặc định false. API đọc lại ngay để đối chiếu. `persist=true` yêu cầu module lưu khi mất nguồn, chưa nghiệm thu power-cycle. Chưa có API công suất riêng anten.
+Hoặc đặt riêng ANT1–ANT4:
+
+```json
+{"powers_dbm": [20, 21, 22, 23], "persist": false}
+```
+
+Chỉ gửi một trong `dbm` hoặc `powers_dbm`. Mọi giá trị nguyên 0–30; mảng phải đủ số anten đã cấu hình (1 hoặc 4). `persist` mặc định false. API đọc lại toàn bộ cổng để đối chiếu, không suy ra công suất ANT2–4 từ ANT1. Firmware không hỗ trợ query từng anten trả lỗi rõ ràng và không gửi Set.
+
+```json
+{"dbm": null, "powers_dbm": [20,21,22,23], "scope":"per_antenna", "simulated":true}
+```
+
+**Thay đổi từ alpha 1:** `dbm` có thể là null khi các cổng khác nhau; `powers_dbm` luôn chứa giá trị từng cổng. Nếu tất cả bằng nhau, `dbm` là giá trị chung và `scope` là global. Không dùng trường `power_dbm` trong reader-info để suy ra công suất từng anten.
+
+## Tần số hoạt động
+
+`GET /v1/region` đọc band và khoảng kênh thực tế. `POST /v1/region` đặt band và dải kênh liên tục:
+
+```json
+{"band":27,"min_channel":0,"max_channel":7,"persist":false}
+```
+
+Ví dụ trên dùng mã band 27 trong bảng firmware ZK; kết quả `frequencies_khz` từ 918750 tới 922250 kHz, bước 500 kHz. Muốn một tần số cố định, đặt min=max; band 27, kênh 3 là 920250 kHz.
+
+`min_channel`/`max_channel` là chỉ số kênh ZK, không phải kênh Nation. API kiểm tra bảng ở `configuration.py` và đọc lại bằng `0x9E` sau Set `0x22`. Không hỗ trợ danh sách kênh rời rạc; không thay thế bằng khoảng rộng hơn một cách âm thầm.
+
+Kết quả gồm `band`, `min_channel`, `max_channel`, `band_name`, `frequencies_khz`, `table_known`, `simulated`. Nếu firmware trả band ngoài bảng hoặc phạm vi chưa xác định, giữ giá trị gốc và trả `table_known=false`, tần số null. Bảng band là định nghĩa trong SDK, không phải xác nhận phạm vi được phép phát ở nơi triển khai.
+
+Python: `reader.region()` để đọc; `reader.region(band=27, min_channel=3, max_channel=3)` để đặt kênh cố định.
+
+## Link profile / EPC Baseband
+
+- `GET /v1/profile`: tự chọn định dạng, ưu tiên extended để đọc profile thực tế trên Gen2X.
+- `GET /v1/profile/extended`: đọc định dạng extended 2 byte trên firmware hỗ trợ.
+- `POST /v1/profile`: đặt profile bằng lệnh `0x7F`, rồi gửi Get độc lập để đối chiếu.
+
+```json
+{"profile_id":7,"format":"auto","persist":false}
+```
+
+```json
+{"profile_id":241,"format":"extended","persist":false}
+```
+
+`format` mặc định auto: thử đọc extended; chỉ chuyển sang legacy nếu reader trả lỗi định dạng/lệnh rõ ràng `0xFD/0xFE`. Không fallback sau timeout/CRC hoặc sau một lần Set. Legacy nhận ID 0–63; extended nhận ID 0–65535. Không phải mọi ID trong khoảng đều được firmware hỗ trợ; reader có thể trả lỗi. API không tự đổi sang profile gần giống.
+
+Trên module Gen2X đã thử, Get legacy trả 0 trong khi profile extended thực tế là 146. Vì vậy không ép legacy trên module mới. `format` trong kết quả là định dạng đã dùng (legacy hoặc extended), không phải auto.
+
+Kết quả ví dụ: `{"profile_id":146,"format":"extended","namespace":"zk","simulated":false}`. **Đây là ID ZK, không phải chỉ số dropdown Nation/R2000.** Ví dụ tài liệu Ex10 ghi ZK profile 7 là Miller4, BLF 250 kHz, Tari 20 µs; Nation mode 1 trong tài liệu có Tari 25 µs. Không coi hai chế độ tương đương chỉ vì cùng Miller/BLF.
+
+Python: `reader.profile()` hoặc `reader.profile(format="extended")` để đọc; `reader.profile(241, format="extended")` để đặt.
+
+Với cả power, region và profile, `persist=true` yêu cầu firmware lưu khi mất nguồn. API chỉ xác nhận readback trong phiên, chưa nghiệm thu power-cycle. Những lệnh này sửa cấu hình phần cứng nên không tự lặp sau mất phản hồi.
 
 ## Inventory
 

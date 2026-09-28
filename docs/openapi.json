@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "ZK Reader API",
-    "version": "0.1.0a1",
-    "description": "Local API for direct serial Ex10 reader access on the same OS. Alpha: hardware and macOS/Linux not yet qualified. Poll inventory sequentially for continuous reading; no background start/stop. Never automatically retry a write."
+    "version": "0.1.0a2",
+    "description": "Local API for direct serial Ex10 reader access on the same OS. Power/region/profile set-get verified on one Windows-connected four-antenna module; macOS/Linux and RF read/write are not yet qualified. Poll inventory sequentially for continuous reading; no background start/stop. Never automatically retry a write."
   },
   "servers": [
     {
@@ -255,7 +255,7 @@
     "/v1/power": {
       "get": {
         "operationId": "getPower",
-        "summary": "Read global power",
+        "summary": "Read each antenna power from hardware",
         "responses": {
           "200": {
             "description": "Success; inspect simulated, partial or verified fields",
@@ -371,7 +371,7 @@
       },
       "post": {
         "operationId": "setPower",
-        "summary": "Set global power and read back",
+        "summary": "Set global or individual antenna powers and read back",
         "responses": {
           "200": {
             "description": "Success; inspect simulated, partial or verified fields",
@@ -490,6 +490,612 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PowerRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/region": {
+      "get": {
+        "operationId": "getRegion",
+        "summary": "Read band and operating channel range",
+        "responses": {
+          "200": {
+            "description": "Success; inspect simulated, partial or verified fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Region"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid Bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Host or Origin rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reader busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "411": {
+            "description": "Content-Length required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 8192 bytes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Device error; raw status preserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Protocol/restore error; a write may already have occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Transport unavailable; close/reopen, do not retry writes blindly",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "setRegion",
+        "summary": "Set band/channel range or fixed channel and read back",
+        "responses": {
+          "200": {
+            "description": "Success; inspect simulated, partial or verified fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Region"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid Bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Host or Origin rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reader busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "411": {
+            "description": "Content-Length required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 8192 bytes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Device error; raw status preserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Protocol/restore error; a write may already have occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Transport unavailable; close/reopen, do not retry writes blindly",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegionRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profile": {
+      "get": {
+        "operationId": "getProfile",
+        "summary": "Read actual ZK link profile; prefer extended, explicit-error legacy fallback",
+        "responses": {
+          "200": {
+            "description": "Success; inspect simulated, partial or verified fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid Bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Host or Origin rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reader busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "411": {
+            "description": "Content-Length required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 8192 bytes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Device error; raw status preserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Protocol/restore error; a write may already have occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Transport unavailable; close/reopen, do not retry writes blindly",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "setProfile",
+        "summary": "Set raw ZK profile ID and read back",
+        "responses": {
+          "200": {
+            "description": "Success; inspect simulated, partial or verified fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid Bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Host or Origin rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reader busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "411": {
+            "description": "Content-Length required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 8192 bytes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Device error; raw status preserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Protocol/restore error; a write may already have occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Transport unavailable; close/reopen, do not retry writes blindly",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profile/extended": {
+      "get": {
+        "operationId": "getExtendedProfile",
+        "summary": "Read ZK extended link profile",
+        "responses": {
+          "200": {
+            "description": "Success; inspect simulated, partial or verified fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid Bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Host or Origin rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reader busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "411": {
+            "description": "Content-Length required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 8192 bytes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Device error; raw status preserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Protocol/restore error; a write may already have occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Transport unavailable; close/reopen, do not retry writes blindly",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1061,13 +1667,186 @@
             "minimum": 0,
             "maximum": 30
           },
+          "powers_dbm": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "description": "Exactly one value per configured antenna, in ANT1..ANT4 order"
+          },
+          "persist": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "dbm"
+            ],
+            "not": {
+              "required": [
+                "powers_dbm"
+              ]
+            }
+          },
+          {
+            "required": [
+              "powers_dbm"
+            ],
+            "not": {
+              "required": [
+                "dbm"
+              ]
+            }
+          }
+        ]
+      },
+      "RegionRequest": {
+        "type": "object",
+        "properties": {
+          "band": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "min_channel": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "max_channel": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
           "persist": {
             "type": "boolean",
             "default": false
           }
         },
         "required": [
-          "dbm"
+          "band",
+          "min_channel",
+          "max_channel"
+        ],
+        "additionalProperties": false
+      },
+      "Region": {
+        "type": "object",
+        "properties": {
+          "band": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "min_channel": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "max_channel": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "band_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "table_known": {
+            "type": "boolean"
+          },
+          "frequencies_khz": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer"
+            }
+          },
+          "simulated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "band",
+          "min_channel",
+          "max_channel",
+          "band_name",
+          "table_known",
+          "frequencies_khz",
+          "simulated"
+        ],
+        "additionalProperties": false
+      },
+      "ProfileRequest": {
+        "type": "object",
+        "properties": {
+          "profile_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "legacy",
+              "extended"
+            ],
+            "default": "auto",
+            "description": "auto prefers extended reads and falls back to legacy only after explicit FD/FE device rejection. legacy IDs 0..63; extended 0..65535. Raw ZK namespace, not Nation mode IDs."
+          },
+          "persist": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "profile_id"
+        ],
+        "additionalProperties": false
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "profile_id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "legacy",
+              "extended"
+            ]
+          },
+          "namespace": {
+            "type": "string",
+            "enum": [
+              "zk"
+            ]
+          },
+          "simulated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "profile_id",
+          "format",
+          "namespace",
+          "simulated"
         ],
         "additionalProperties": false
       },
@@ -1162,14 +1941,29 @@
         "type": "object",
         "properties": {
           "dbm": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "minimum": 0,
-            "maximum": 255
+            "maximum": 30,
+            "description": "null when antenna values differ"
+          },
+          "powers_dbm": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30
+            }
           },
           "scope": {
             "type": "string",
             "enum": [
-              "global"
+              "global",
+              "per_antenna"
             ]
           },
           "simulated": {
@@ -1178,6 +1972,7 @@
         },
         "required": [
           "dbm",
+          "powers_dbm",
           "scope",
           "simulated"
         ],

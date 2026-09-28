@@ -6,6 +6,7 @@
 src/zk_reader_api/
   protocol.py     CRC, frame, serial, deadline, transaction lock
   reader.py       info/power/inventory/read/write, validate và antenna restore
+  configuration.py bảng band/channel ZK, quy đổi kHz và kiểm tra dải kênh
   simulation.py   một thẻ tổng hợp, xử lý command frame trong RAM
   server.py       HTTP loopback, token, JSON, điều phối thao tác
   errors.py       lỗi thiết bị, transport, protocol, restore

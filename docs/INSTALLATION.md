@@ -28,7 +28,7 @@ python3 -m venv .venv
 .venv/bin/python -m zk_reader_api.server --list-ports
 ```
 
-Có thể thay `.` bằng đường dẫn wheel tải từ release, ví dụ `zk_reader_api-0.1.0a1-py3-none-any.whl`. pip cần Internet để lấy pySerial nếu chưa có. Wheel Python thuần không chứa DLL hoặc driver thiết bị; không có EXE dùng chung mọi OS.
+Có thể thay `.` bằng đường dẫn wheel tải từ release, ví dụ `zk_reader_api-0.1.0a2-py3-none-any.whl`. pip cần Internet để lấy pySerial nếu chưa có. Wheel Python thuần không chứa DLL hoặc driver thiết bị; không có EXE dùng chung mọi OS.
 
 ## Chọn cổng vật lý
 
@@ -56,4 +56,4 @@ HTTP phục vụ ứng dụng desktop/backend cục bộ; không bật CORS cho 
 
 ## Nghiệm thu trước khi triển khai
 
-Kiểm tra thông tin reader → inventory từng anten → đọc TID/User → đặt/đọc lại công suất → ghi thẻ thử và đọc lại. Ghi nhận model, firmware, adapter, OS và Python. Hiện chưa có bằng chứng reader thật chạy API mới trên ba OS; xem [VALIDATION.md](VALIDATION.md).
+Kiểm tra thông tin reader → inventory từng anten → đọc TID/User → đặt/đọc lại công suất → ghi thẻ thử và đọc lại. Ghi nhận model, firmware, adapter, OS và Python. Alpha 2 đã thử các chức năng cấu hình trên một module thật ở Windows; chưa nghiệm thu RF/ba OS đầy đủ. Xem [VALIDATION.md](VALIDATION.md).

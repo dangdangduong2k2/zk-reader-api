@@ -4,6 +4,7 @@ import hmac
 import json
 import secrets
 import threading
+from functools import partial
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -77,6 +78,11 @@ class Handler(BaseHTTPRequestHandler):
         routes = {("GET", "/v1/reader"): self.server.reader.info,
                   ("GET", "/v1/power"): self.server.reader.power,
                   ("POST", "/v1/power"): self.server.reader.power,
+                  ("GET", "/v1/region"): self.server.reader.region,
+                  ("POST", "/v1/region"): self.server.reader.region,
+                  ("GET", "/v1/profile"): self.server.reader.profile,
+                  ("GET", "/v1/profile/extended"): partial(self.server.reader.profile, format="extended"),
+                  ("POST", "/v1/profile"): self.server.reader.profile,
                   ("POST", "/v1/inventory"): self.server.reader.inventory,
                   ("POST", "/v1/read"): self.server.reader.read,
                   ("POST", "/v1/write"): self.server.reader.write}
@@ -102,8 +108,17 @@ class Handler(BaseHTTPRequestHandler):
                 params = json.loads(raw, object_pairs_hook=unique_object)
                 if not isinstance(params, dict):
                     raise ValueError("JSON body must be an object")
-                if self.path == "/v1/power" and type(params.get("dbm")) is not int:
-                    raise ValueError("Integer dbm is required")
+                if self.path == "/v1/power":
+                    if ("dbm" in params) == ("powers_dbm" in params):
+                        raise ValueError("Exactly one of dbm/powers_dbm is required")
+                    if "dbm" in params and type(params["dbm"]) is not int:
+                        raise ValueError("Integer dbm is required")
+                    if "powers_dbm" in params and not isinstance(params["powers_dbm"], list):
+                        raise ValueError("powers_dbm array is required")
+                if self.path == "/v1/region" and any(type(params.get(k)) is not int for k in ("band", "min_channel", "max_channel")):
+                    raise ValueError("Integer band/min_channel/max_channel required")
+                if self.path == "/v1/profile" and type(params.get("profile_id")) is not int:
+                    raise ValueError("Integer profile_id required")
         except (ValueError, UnicodeError, OSError):
             return self.respond(400, {"error": "invalid_json_body"})
         if not self.server.operation_lock.acquire(blocking=False):

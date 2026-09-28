@@ -4,6 +4,7 @@ import re
 
 from .errors import DeviceError, ProtocolError, RestoreError
 from .protocol import SerialTransport, integer
+from .configuration import validate_region, region_description
 
 
 def hex_bytes(value, name, minimum=0, maximum=256, words=False):
@@ -99,7 +100,7 @@ class Reader:
         with self.transport.lock:
             data = self._call(0x21)
             # Manual length example conflicts with its table; use the table's 12-byte format.
-            if len(data) != 12 or data[4:6] == b"\xff\xff":
+            if len(data) != 12:
                 raise ProtocolError("Unsupported reader-info format; expected classic 12-byte profile")
             return {"simulated": self.simulated, "address": self.transport.address,
                     "firmware": f"{data[0]}.{data[1]}", "reader_type": data[2],
@@ -107,18 +108,103 @@ class Reader:
                     "power_dbm": data[6], "antenna_mask": data[8] & 15,
                     "frequency_bytes": data[4:6].hex().upper(), "check_antenna": data[11]}
 
-    def power(self, dbm=None, persist=False):
+    def power(self, dbm=None, persist=False, powers_dbm=None):
         if type(persist) is not bool:
             raise ValueError("persist must be boolean")
+        if dbm is not None and powers_dbm is not None:
+            raise ValueError("Use either dbm or powers_dbm, not both")
+        desired = None
         if dbm is not None:
             integer(dbm, 0, 30, "dbm")
+            desired = [dbm] * self.antennas
+        if powers_dbm is not None:
+            if not isinstance(powers_dbm, (list, tuple)) or len(powers_dbm) != self.antennas:
+                raise ValueError("powers_dbm must contain one value for every configured antenna")
+            desired = [integer(p, 0, 30, "powers_dbm value") for p in powers_dbm]
         with self.transport.lock:
-            if dbm is not None:
-                self._call(0x2F, bytes((dbm | (0 if persist else 128),)))
-            actual = self.info()["power_dbm"]
-            if dbm is not None and actual != dbm:
+            # Check vector support and physical port count BEFORE changing power.
+            actual = self._read_powers()
+            if desired is not None:
+                values = [dbm] if dbm is not None else desired
+                self._call(0x2F, bytes(p | (0 if persist else 128) for p in values))
+                actual = self._read_powers()
+            if desired is not None and actual != desired:
                 raise ProtocolError("Power readback mismatch; setting may have changed")
-            return {"dbm": actual, "scope": "global", "simulated": self.simulated}
+            uniform = len(set(actual)) == 1
+            return {"dbm": actual[0] if uniform else None, "powers_dbm": actual,
+                    "scope": "global" if uniform else "per_antenna", "simulated": self.simulated}
+
+    def _read_powers(self):
+        data = self._call(0x94)
+        if len(data) != self.antennas or any(p > 30 for p in data):
+            raise ProtocolError("Power vector does not match configured antennas or 0..30 dBm range")
+        return list(data)
+
+    def region(self, band=None, min_channel=None, max_channel=None, persist=False):
+        if type(persist) is not bool:
+            raise ValueError("persist must be boolean")
+        setting = any(v is not None for v in (band, min_channel, max_channel))
+        if setting:
+            validate_region(band, min_channel, max_channel)
+        with self.transport.lock:
+            # Preflight avoids writing through firmware without readback support.
+            current = self._read_region()
+            if setting:
+                self._call(0x22, bytes((0 if persist else 1, band, max_channel, min_channel)))
+                current = self._read_region()
+                if current != (band, min_channel, max_channel):
+                    raise ProtocolError("Region readback mismatch; setting may have changed")
+            return dict(region_description(*current), simulated=self.simulated)
+
+    def _read_region(self):
+        data = self._call(0x9E)
+        if len(data) != 3 or data[2] > data[1]:
+            raise ProtocolError("Invalid region response")
+        return data[0], data[2], data[1]
+
+    def profile(self, profile_id=None, persist=False, format="auto"):
+        if format not in ("auto", "legacy", "extended"):
+            raise ValueError("format must be auto, legacy or extended")
+        if type(persist) is not bool:
+            raise ValueError("persist must be boolean")
+        if profile_id is not None:
+            integer(profile_id, 0, 63 if format == "legacy" else 65535, "profile_id")
+        def read(selected_format):
+            query = b"\x00" if selected_format == "legacy" else b"\x00\x00\x00"
+            size = 1 if selected_format == "legacy" else 2
+            data = self._call(0x7F, query)
+            if len(data) != size or (selected_format == "legacy" and data[0] > 63):
+                raise ProtocolError("Invalid profile response for requested format")
+            return int.from_bytes(data, "big")
+
+        with self.transport.lock:
+            if format == "auto":
+                try:
+                    actual = read("extended")
+                    format = "extended"
+                except DeviceError as error:
+                    # Only a definitive format/command rejection permits a read-only
+                    # fallback. Never retry after timeout, bad CRC or any Set attempt.
+                    if error.status not in (0xFD, 0xFE):
+                        raise
+                    actual = read("legacy")
+                    format = "legacy"
+            else:
+                actual = read(format)
+            size = 1 if format == "legacy" else 2
+            if profile_id is not None:
+                integer(profile_id, 0, 63 if format == "legacy" else 65535, "profile_id")
+                payload = (bytes((profile_id | 128 | (0 if persist else 64),)) if format == "legacy"
+                           else bytes((1 if persist else 2,)) + profile_id.to_bytes(2, "big"))
+                echoed = self._call(0x7F, payload)
+                if len(echoed) != size:
+                    raise ProtocolError("Invalid profile set response; setting may have changed")
+                actual = read(format)
+                if actual != profile_id:
+                    raise ProtocolError("Profile readback mismatch; setting may have changed")
+            # These are raw ZK IDs, never Nation/R2000 mode numbers.
+            return {"profile_id": actual, "format": format, "namespace": "zk",
+                    "simulated": self.simulated}
 
     def inventory(self, antennas=None, scan_time=3, q=4, session=0, target=0, selector=None):
         if antennas is None:

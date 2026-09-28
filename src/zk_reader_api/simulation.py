@@ -7,7 +7,9 @@ class MemorySerial:
         self.timeout = 0.05
         self.buffer = bytearray()
         self.closed = False
-        self.power = 20
+        self.powers = [20] * antennas
+        self.region = bytes((1, 19, 0))
+        self.profile_id = 7
         self.mask = (1 << antennas) - 1
         self.banks = {0: bytearray(8),
                       1: bytearray.fromhex("00003000E20000000000000000000001") + bytearray(112),
@@ -43,9 +45,37 @@ class MemorySerial:
         command, payload = wire[2], wire[3:-2]
         status, data = 0, b""
         if command == 0x21:
-            data = bytes((0, 1, 0x75, 2, 0, 0, self.power, 3, self.mask, 0, 0, 1))
+            data = bytes((0, 1, 0x75, 2, 255, 255, self.powers[0], 3, self.mask, 0, 0, 1))
         elif command == 0x2F:
-            self.power = payload[0] & 127
+            if len(payload) == 1:
+                self.powers = [payload[0] & 127] * len(self.powers)
+            elif len(payload) == len(self.powers):
+                self.powers = [p & 127 for p in payload]
+            else:
+                status = 0xFD
+        elif command == 0x94:
+            data = bytes(self.powers)
+        elif command == 0x22:
+            if len(payload) == 4:
+                self.region = payload[1:]
+            else:
+                status = 0xFD
+        elif command == 0x9E:
+            data = self.region
+        elif command == 0x7F:
+            if len(payload) == 1:
+                if payload[0] & 128:
+                    self.profile_id = payload[0] & 63
+                if self.profile_id > 63:
+                    status = 0xFD
+                else:
+                    data = bytes((self.profile_id,))
+            elif len(payload) == 3 and payload[0] in (0, 1, 2):
+                if payload[0]:
+                    self.profile_id = int.from_bytes(payload[1:], "big")
+                data = self.profile_id.to_bytes(2, "big")
+            else:
+                status = 0xFD
         elif command == 0x3F:
             self.mask = payload[0] & 15
         elif command == 1:
