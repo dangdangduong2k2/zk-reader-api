@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "ZK Reader API",
-    "version": "0.1.0a2",
+    "version": "0.1.0a3",
     "description": "Local API for direct serial Ex10 reader access on the same OS. Power/region/profile set-get verified on one Windows-connected four-antenna module; macOS/Linux and RF read/write are not yet qualified. Poll inventory sequentially for continuous reading; no background start/stop. Never automatically retry a write."
   },
   "servers": [
@@ -1102,6 +1102,250 @@
         }
       }
     },
+    "/v1/query": {
+      "get": {
+        "operationId": "getQuery",
+        "summary": "Read native Ex10 CFG9 Q/Session",
+        "responses": {
+          "200": {
+            "description": "Success; inspect simulated, partial or verified fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Query"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid Bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Host or Origin rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reader busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "411": {
+            "description": "Content-Length required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 8192 bytes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Device error; raw status preserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Protocol/restore error; a write may already have occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Transport unavailable; close/reopen, do not retry writes blindly",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "setQuery",
+        "summary": "Set native Q/Session, preserve omitted field and read back",
+        "responses": {
+          "200": {
+            "description": "Success; inspect simulated, partial or verified fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Query"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid Bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Host or Origin rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reader busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "411": {
+            "description": "Content-Length required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 8192 bytes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Device error; raw status preserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Protocol/restore error; a write may already have occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Transport unavailable; close/reopen, do not retry writes blindly",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/inventory": {
       "post": {
         "operationId": "inventory",
@@ -1657,6 +1901,74 @@
           }
         },
         "required": [],
+        "additionalProperties": false
+      },
+      "QueryRequest": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15
+          },
+          "session": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              255
+            ]
+          },
+          "persist": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "q"
+            ]
+          },
+          {
+            "required": [
+              "session"
+            ]
+          }
+        ],
+        "description": "Native Ex10 CFG9 for fast query. Partial updates preserve the other field; persist saves both fields. Does not change ordinary inventory per-call defaults."
+      },
+      "Query": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15
+          },
+          "session": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              255
+            ]
+          },
+          "simulated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "q",
+          "session",
+          "simulated"
+        ],
         "additionalProperties": false
       },
       "PowerRequest": {

@@ -206,6 +206,36 @@ class Reader:
             return {"profile_id": actual, "format": format, "namespace": "zk",
                     "simulated": self.simulated}
 
+    def query(self, q=None, session=None, persist=False):
+        """Read/set native Ex10 CFG9. Ordinary inventory has separate per-call Q/Session."""
+        if type(persist) is not bool:
+            raise ValueError("persist must be boolean")
+        if q is not None:
+            integer(q, 0, 15, "q")
+        if session is not None:
+            integer(session, 0, 255, "session")
+            if session not in (0, 1, 2, 3, 255):
+                raise ValueError("session must be 0..3 or 255 (Auto)")
+        with self.transport.lock:
+            actual = self._read_query()
+            if q is not None or session is not None:
+                desired = (actual[0] if q is None else q,
+                           actual[1] if session is None else session)
+                # CFG9 writes/saves both fields together, including the preserved field.
+                reply = self._call(0xEA, bytes((0 if persist else 1, 9, *desired)))
+                if reply:
+                    raise ProtocolError("Invalid query set response; setting may have changed")
+                actual = self._read_query()
+                if actual != desired:
+                    raise ProtocolError("Query readback mismatch; setting may have changed")
+            return {"q": actual[0], "session": actual[1], "simulated": self.simulated}
+
+    def _read_query(self):
+        data = self._call(0xEB, b"\x09")
+        if len(data) != 2 or data[0] > 15 or data[1] not in (0, 1, 2, 3, 255):
+            raise ProtocolError("Invalid CFG9 Q/Session response")
+        return tuple(data)
+
     def inventory(self, antennas=None, scan_time=3, q=4, session=0, target=0, selector=None):
         if antennas is None:
             antennas = list(range(1, self.antennas + 1))

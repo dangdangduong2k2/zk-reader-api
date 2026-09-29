@@ -4,7 +4,9 @@
 
 Đây là repo riêng với [rs232-bridge](https://github.com/dangdangduong2k2/rs232-bridge). Ứng dụng mới gọi API này; phần mềm Nation cũ không tự chuyển sang dùng HTTP.
 
-**0.1.0 alpha 2 — đã thử Set/Get tần số, link profile và công suất từng anten trên module thật 4 anten, firmware 2.8, Windows.** 46 test tự động đạt. Chưa nghiệm thu macOS/Linux và đọc/ghi RF qua API mới. Cần driver USB/RS232 phù hợp với adapter trên OS đang dùng. Không phải API cho mọi sản phẩm ZK.
+**0.1.0 alpha 3 — thêm Set/Get Q/Session gốc trên module qua CFG9.** Tần số, link profile và công suất từng anten đã thử trên module thật 4 anten, firmware 2.8, Windows ở alpha 2. Q/Session của API mới được kiểm thử tự động, chưa thử trên phần cứng qua Python. Chưa nghiệm thu macOS/Linux và đọc/ghi RF qua API mới. Cần driver USB/RS232 phù hợp với adapter trên OS đang dùng. Không phải API cho mọi sản phẩm ZK.
+
+**[Tải API alpha 3: wheel, source và OpenAPI](https://github.com/dangdangduong2k2/zk-reader-api/releases/tag/v0.1.0-alpha.3).** Người dùng phần mềm Nation trên Windows tải **[bộ cài EXE RS232 Bridge RC3](https://github.com/dangdangduong2k2/rs232-bridge/releases/tag/v0.5.0-rc.3)**.
 
 ## Cài và chạy
 
@@ -48,6 +50,7 @@ with Reader.open("/dev/cu.usbserial-XXXX", antennas=4) as reader:
 | Đọc / đặt công suất chung hoặc riêng từng anten | `GET /v1/power`, `POST /v1/power` |
 | Đọc / đặt band và dải kênh tần số, hoặc kênh cố định | `GET /v1/region`, `POST /v1/region` |
 | Đọc / đặt link profile ZK | `GET /v1/profile`, `GET /v1/profile/extended`, `POST /v1/profile` |
+| Đọc / đặt Q và Session gốc (Ex10 CFG9) | `GET /v1/query`, `POST /v1/query` |
 | Đọc EPC, chọn anten, lọc EPC/TID/User | `POST /v1/inventory` |
 | Đọc vùng Reserved/EPC/TID/User | `POST /v1/read` |
 | Ghi vùng EPC/User có bộ chọn thẻ | `POST /v1/write` |

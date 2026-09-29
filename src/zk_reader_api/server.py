@@ -83,6 +83,8 @@ class Handler(BaseHTTPRequestHandler):
                   ("GET", "/v1/profile"): self.server.reader.profile,
                   ("GET", "/v1/profile/extended"): partial(self.server.reader.profile, format="extended"),
                   ("POST", "/v1/profile"): self.server.reader.profile,
+                  ("GET", "/v1/query"): self.server.reader.query,
+                  ("POST", "/v1/query"): self.server.reader.query,
                   ("POST", "/v1/inventory"): self.server.reader.inventory,
                   ("POST", "/v1/read"): self.server.reader.read,
                   ("POST", "/v1/write"): self.server.reader.write}
@@ -119,6 +121,11 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("Integer band/min_channel/max_channel required")
                 if self.path == "/v1/profile" and type(params.get("profile_id")) is not int:
                     raise ValueError("Integer profile_id required")
+                if self.path == "/v1/query":
+                    if not any(k in params for k in ("q", "session")):
+                        raise ValueError("q or session required")
+                    if any(type(params[k]) is not int for k in ("q", "session") if k in params):
+                        raise ValueError("q and session must be integers when provided")
         except (ValueError, UnicodeError, OSError):
             return self.respond(400, {"error": "invalid_json_body"})
         if not self.server.operation_lock.acquire(blocking=False):

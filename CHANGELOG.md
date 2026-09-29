@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0a3 — 2026-09-29
+
+- Thêm `Reader.query()` và GET/POST `/v1/query` cho Q/Session gốc Ex10 CFG9 (0xEB/0xEA), không dùng cache để giả phản hồi module.
+- Get trước Set; sửa riêng Q hoặc Session giữ nguyên trường còn lại; đọc lại sau Set và báo lỗi nếu không khớp. `persist=true` lưu cả cặp theo giao thức module.
+- Hỗ trợ Session 255 Auto trong CFG9; inventory thường vẫn dùng tham số mỗi lời gọi, mặc định Q=4/Session=0. Không đổi hành vi inventory của alpha 2.
+- Cập nhật OpenAPI, hướng dẫn Python/HTTP, ví dụ cấu hình, tài liệu giới hạn và link bộ cài Windows dành cho người dùng Nation.
+- 54 test tự động đạt trên Windows. CFG9 mới được kiểm thử bằng serial giả và HTTP loopback; chưa nghiệm thu Q/Session qua Python trên module thật, macOS/Linux hoặc RF đọc/ghi qua API.
+
 ## 0.1.0a2 — 2026-09-28
 
 - Thêm Get/Set band và dải kênh tần số qua 0x9E/0x22; hỗ trợ kênh cố định khi min=max.

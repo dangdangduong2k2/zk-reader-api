@@ -1,8 +1,9 @@
-# Kiểm chứng — 0.1.0 alpha 2
+# Kiểm chứng — 0.1.0 alpha 3
 
 ## Đã chạy
 
-- 46 bài kiểm thử đạt trên Windows/Python 3.14; hợp đồng OpenAPI 3.1 đã qua validator. Alpha 1 có 25 bài và đã được chạy từ wheel trong venv riêng.
+- 54 bài kiểm thử đạt trên Windows/Python 3.14. Alpha 2 có 46 bài, alpha 1 có 25 bài.
+- Alpha 3 thêm 8 bài kiểm thử CFG9: Get lần đầu, thay đổi ngoài API, Set từng trường giữ trường còn lại, Auto=255, cờ lưu, phản hồi lỗi/sai định dạng, không retry Set, validation trước I/O và HTTP GET/POST. Inventory vẫn có Q/Session riêng, không ngầm dùng CFG9.
 - Alpha 2 thêm cấu hình tần số/profile/công suất từng anten: frame khớp DLL, độc lập Get sau Set, lỗi readback, sai số cổng, persistence flags, ID extended không bị cắt còn 1 byte, giới hạn kênh và HTTP roundtrip.
 - Unit/integration test Python trên Windows với backend serial giả và HTTP thật trên loopback.
 - Byte command đối chiếu với SDK DLL gốc qua TCP reader giả: info, inventory không mask/có mask, power, antenna, read, write.
@@ -12,7 +13,7 @@
 - Kiểm tra đầu vào trước serial I/O: vùng nhớ, số anten, độ dài hex, địa chỉ tràn, giới hạn công suất.
 - HTTP kiểm tra token, Host/Origin, tham số, reader busy, vòng đọc/ghi mô phỏng.
 
-Danh sách test có trong `tests/test_api.py`; chạy lại bằng `python -m unittest discover -s tests -v`. Mẫu EPC/TID/password trong test đều là dữ liệu tổng hợp.
+Danh sách test có trong `tests/`; chạy lại bằng `python -m unittest discover -s tests -v`. Mẫu EPC/TID/password trong test đều là dữ liệu tổng hợp.
 
 ## Phần cứng thật — 28/09/2026, alpha 2
 
@@ -24,6 +25,7 @@ Danh sách test có trong `tests/test_api.py`; chạy lại bằng `python -m un
 
 ## Chưa nghiệm thu
 
+- **Q/Session CFG9 qua API Python alpha 3 chưa thử trên module thật.** Test serial giả và HTTP xác nhận xử lý giao thức; kết quả phần cứng từ bridge dùng DLL không được tính thành nghiệm thu đường Python.
 - **Đọc/ghi RF qua API serial mới chưa được nghiệm thu trên thẻ thật.** Lúc làm alpha 1 không có reader; phần cứng trở lại khi sửa alpha 2 và mới thử các chức năng cấu hình nêu trên.
 - Chưa chạy trực tiếp trên máy macOS/Linux hoặc Mac Apple Silicon. Mã Python/pySerial tránh phụ thuộc Windows; điều này là thiết kế khả chuyển, không phải bằng chứng nghiệm thu từng OS/adapter.
 - Profile reader-info 12 byte đã đọc được trên module thử. Chưa nghiệm thu module 1 anten, RF đủ 4 anten, đọc/ghi địa chỉ mở rộng, mất nguồn, USB rút/cắm lại, tải dài hạn.

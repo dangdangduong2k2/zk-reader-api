@@ -10,6 +10,7 @@ class MemorySerial:
         self.powers = [20] * antennas
         self.region = bytes((1, 19, 0))
         self.profile_id = 7
+        self.query = bytes((6, 1))
         self.mask = (1 << antennas) - 1
         self.banks = {0: bytearray(8),
                       1: bytearray.fromhex("00003000E20000000000000000000001") + bytearray(112),
@@ -74,6 +75,17 @@ class MemorySerial:
                 if payload[0]:
                     self.profile_id = int.from_bytes(payload[1:], "big")
                 data = self.profile_id.to_bytes(2, "big")
+            else:
+                status = 0xFD
+        elif command == 0xEB:
+            if payload == b"\x09":
+                data = self.query
+            else:
+                status = 0xFD
+        elif command == 0xEA:
+            if (len(payload) == 4 and payload[0] in (0, 1) and payload[1] == 9
+                    and payload[2] <= 15 and payload[3] in (0, 1, 2, 3, 255)):
+                self.query = payload[2:]
             else:
                 status = 0xFD
         elif command == 0x3F:

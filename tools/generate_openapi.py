@@ -17,6 +17,8 @@ write=obj({**common,"bank":{"type":"integer","enum":[1,3]},"hex":hx(4,128,"^(?:[
 write["description"]="1..32 words; EPC CRC word 0 forbidden; range cannot wrap. PC is not auto-adjusted. No automatic retries or readback."
 inv=obj({"antennas":{"type":"array","minItems":1,"maxItems":4,"uniqueItems":True,"items":num(1,4)},"scan_time":{**num(3,20),"default":3,"description":"100 ms units per antenna"},"q":{**num(0,15),"default":4},"session":{**num(0,3),"default":0},"target":{**num(0,1),"default":0},"selector":ref("Selector")})
 schemas={"Selector":selector,"ReadRequest":read,"WriteRequest":write,"InventoryRequest":inv,
+"QueryRequest":{**obj({"q":num(0,15),"session":{"type":"integer","enum":[0,1,2,3,255]},"persist":{**boolean,"default":False}}),"anyOf":[{"required":["q"]},{"required":["session"]}],"description":"Native Ex10 CFG9 for fast query. Partial updates preserve the other field; persist saves both fields. Does not change ordinary inventory per-call defaults."},
+"Query":obj({"q":num(0,15),"session":{"type":"integer","enum":[0,1,2,3,255]},"simulated":boolean},("q","session","simulated")),
 "PowerRequest":{**obj({"dbm":num(0,30),"powers_dbm":{"type":"array","minItems":1,"maxItems":4,"items":num(0,30),"description":"Exactly one value per configured antenna, in ANT1..ANT4 order"},"persist":{**boolean,"default":False}}),"oneOf":[{"required":["dbm"],"not":{"required":["powers_dbm"]}},{"required":["powers_dbm"],"not":{"required":["dbm"]}}]},
 "RegionRequest":obj({"band":num(0,255),"min_channel":num(0,255),"max_channel":num(0,255),"persist":{**boolean,"default":False}},("band","min_channel","max_channel")),
 "Region":obj({"band":num(0,255),"min_channel":num(0,255),"max_channel":num(0,255),"band_name":{"type":["string","null"]},"table_known":boolean,"frequencies_khz":{"type":["array","null"],"items":{"type":"integer"}},"simulated":boolean},("band","min_channel","max_channel","band_name","table_known","frequencies_khz","simulated")),
@@ -40,6 +42,8 @@ for path,method,operation,summary,request,result in [
 ('/v1/profile','get','getProfile','Read actual ZK link profile; prefer extended, explicit-error legacy fallback',None,'Profile'),
 ('/v1/profile/extended','get','getExtendedProfile','Read ZK extended link profile',None,'Profile'),
 ('/v1/profile','post','setProfile','Set raw ZK profile ID and read back','ProfileRequest','Profile'),
+('/v1/query','get','getQuery','Read native Ex10 CFG9 Q/Session',None,'Query'),
+('/v1/query','post','setQuery','Set native Q/Session, preserve omitted field and read back','QueryRequest','Query'),
 ('/v1/inventory','post','inventory','One finite scan per selected antenna','InventoryRequest','Inventory'),
 ('/v1/read','post','readMemory','Read selected tag memory','ReadRequest','ReadResult'),
 ('/v1/write','post','writeMemory','Write EPC/User once; no readback or retry','WriteRequest','WriteResult')]:
@@ -49,5 +53,5 @@ for path,method,operation,summary,request,result in [
     item={"operationId":operation,"summary":summary,"responses":responses}
     if request:item['requestBody']={"required":True,"content":{"application/json":{"schema":ref(request)}}}
     paths.setdefault(path,{})[method]=item
-spec={"openapi":"3.1.0","info":{"title":"ZK Reader API","version":"0.1.0a2","description":"Local API for direct serial Ex10 reader access on the same OS. Power/region/profile set-get verified on one Windows-connected four-antenna module; macOS/Linux and RF read/write are not yet qualified. Poll inventory sequentially for continuous reading; no background start/stop. Never automatically retry a write."},"servers":[{"url":"http://127.0.0.1:8765"}],"security":[{"bearerAuth":[]}],"paths":paths,"components":{"securitySchemes":{"bearerAuth":{"type":"http","scheme":"bearer"}},"schemas":schemas}}
+spec={"openapi":"3.1.0","info":{"title":"ZK Reader API","version":"0.1.0a3","description":"Local API for direct serial Ex10 reader access on the same OS. Power/region/profile set-get verified on one Windows-connected four-antenna module; macOS/Linux and RF read/write are not yet qualified. Poll inventory sequentially for continuous reading; no background start/stop. Never automatically retry a write."},"servers":[{"url":"http://127.0.0.1:8765"}],"security":[{"bearerAuth":[]}],"paths":paths,"components":{"securitySchemes":{"bearerAuth":{"type":"http","scheme":"bearer"}},"schemas":schemas}}
 Path(__file__).resolve().parents[1].joinpath('docs/openapi.json').write_text(json.dumps(spec,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

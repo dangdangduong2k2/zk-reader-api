@@ -28,7 +28,7 @@ python3 -m venv .venv
 .venv/bin/python -m zk_reader_api.server --list-ports
 ```
 
-Có thể thay `.` bằng đường dẫn wheel tải từ release, ví dụ `zk_reader_api-0.1.0a2-py3-none-any.whl`. pip cần Internet để lấy pySerial nếu chưa có. Wheel Python thuần không chứa DLL hoặc driver thiết bị; không có EXE dùng chung mọi OS.
+Có thể thay `.` bằng đường dẫn wheel tải từ release, ví dụ `zk_reader_api-0.1.0a3-py3-none-any.whl`. pip cần Internet để lấy pySerial nếu chưa có. Wheel Python thuần không chứa DLL hoặc driver thiết bị; không có EXE dùng chung mọi OS.
 
 ## Chọn cổng vật lý
 

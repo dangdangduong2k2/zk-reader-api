@@ -87,6 +87,33 @@ Python: `reader.profile()` hoặc `reader.profile(format="extended")` để đ�
 
 Với cả power, region và profile, `persist=true` yêu cầu firmware lưu khi mất nguồn. API chỉ xác nhận readback trong phiên, chưa nghiệm thu power-cycle. Những lệnh này sửa cấu hình phần cứng nên không tự lặp sau mất phản hồi.
 
+## Q/Session gốc trên module
+
+`GET /v1/query` đọc trực tiếp Ex10 CFG9, kể cả lần đầu trước khi Set. Không lấy giá trị từ cache trên máy.
+
+`POST /v1/query` nhận ít nhất một trong `q` hoặc `session`:
+
+```json
+{"q":6,"session":1,"persist":false}
+```
+
+Q là số nguyên 0–15; Session là 0–3 hoặc 255 (Auto của CFG9). Bỏ một trường sẽ giữ giá trị hiện tại đọc từ module. Set xong luôn Get độc lập để đối chiếu; firmware không hỗ trợ CFG9 trả lỗi, không giả thành công. Kết quả: `{"q":6,"session":1,"simulated":false}`.
+
+`persist=false` mặc định đặt tạm. `persist=true` lưu **cả cặp Q/Session**, kể cả trường được giữ nguyên, vì CFG9 chỉ ghi nguyên cặp. Readback xác nhận trạng thái hiện tại, chưa xác nhận tồn tại sau mất nguồn.
+
+Python: `reader.query()`, `reader.query(q=6)` hoặc `reader.query(session=1, persist=True)`.
+
+CFG9 dùng cho fast query của module. `/v1/inventory` vẫn gửi Q/Session riêng theo mỗi lời gọi, mặc định Q=4, Session=0 như các bản trước; nó không tự lấy CFG9. Muốn inventory dùng giá trị vừa đọc, truyền rõ ràng:
+
+```python
+cfg = reader.query()
+if cfg["session"] == 255:
+    raise ValueError("Inventory cần Session 0–3; hãy chọn Session cụ thể")
+result = reader.inventory(q=cfg["q"], session=cfg["session"])
+```
+
+API chưa triển khai Start/Stop fast query. Không chuyển Auto=255 thành Session khác một cách ngầm định.
+
 ## Inventory
 
 `POST /v1/inventory`

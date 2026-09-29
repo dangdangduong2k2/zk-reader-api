@@ -8,3 +8,6 @@ with Reader.simulate(antennas=4) as reader:
     print(reader.region())
     print(reader.profile(profile_id=241, format="auto", persist=False))
     print(reader.profile())
+    print(reader.query())
+    print(reader.query(q=6, session=1, persist=False))
+    print(reader.query(q=8))  # Preserve Session read from the device.

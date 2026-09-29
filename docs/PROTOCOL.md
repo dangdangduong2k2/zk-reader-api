@@ -38,6 +38,8 @@ Transport chỉ có một lệnh đang chờ, kiểm tra CRC/command/address, nh
 | 22 | Set region (format 2) | flag 0=lưu/1=không lưu, band, max channel, min channel |
 | 9E | Get region | Rỗng; kết quả band, max channel, min channel |
 | 7F | Link profile | Legacy: bit7=Set, bit6=không lưu, ID 6 bit. Extended: opt 0=Get/1=Set lưu/2=Set không lưu và ID 2 byte big-endian |
+| EB | Get Q/Session | Payload `09` (CFG9); phản hồi đúng 2 byte Q, Session, không có CFGNo lặp lại |
+| EA | Set Q/Session | flag 0=lưu/1=không lưu, `09`, Q, Session; phản hồi status 0 và data rỗng |
 | 3F | Antenna mask | bit0–3 tương ứng anten 1–4; bit7=1 không lưu |
 | 01 | Inventory | Q, session, mask tùy chọn, target, 0x80+antenna-1, scantime |
 | 02 / 15 | Read | 0xFF, bank, word address 1/2 byte, count, password, selector |
@@ -62,3 +64,5 @@ Inventory chỉ giải EPC/RSSI cơ bản. FastID/phase bị từ chối nếu x
 Alpha 2 có thêm capture độc lập từ DLL hãng cho `GetAntennaPower`, `SetAntennaPower`, `ExtGetRegion`, `ExtSetRegion`, `SetProfile`, `SetExtProfile`. Ví dụ `GetAntennaPower` phát `04 00 94 FF 88`; tài liệu có dòng response ghi `0x51` không nhất quán, DLL và module thật thử với reply `0x94` đều giải thành công. Ba nhóm lệnh cấu hình đã Set/Get trên module thật; chi tiết [VALIDATION.md](VALIDATION.md).
 
 Profile mặc định auto ưu tiên extended. Legacy có thể vẫn trả thành công nhưng là trường cũ không phản ánh profile đang chạy trên Gen2X (đã gặp legacy 0 / extended 146). Chỉ fallback đọc legacy khi extended trả status FD/FE; không đoán từ ID nhỏ và không fallback sau lỗi transport/Set.
+
+Alpha 3 triển khai CFG9 theo mục 8.4.39, 8.4.40 và 8.5.2.3 của manual V2.25. Q=0–15; Session=0–3 hoặc 255 Auto. CFG9 là cấu hình fast query; command inventory `01` vẫn có Q/Session riêng trong payload. Get trước Set để giữ trường không sửa; Set cả cặp rồi Get đối chiếu. Lỗi legacy GetQS `EE` trên module đã thử ở bridge không được thay bằng giá trị cache. Đường CFG9 Python mới có test frame/HTTP, chưa được nghiệm thu trên reader thật.
